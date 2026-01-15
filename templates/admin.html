@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: "#EBF2FA",
+              100: "#C6DBF1",
+              200: "#A1C3E8",
+              300: "#7CACDE",
+              400: "#5894D5",
+              500: "#3178C6",
+              600: "#215083",
+              700: "#17395E",
+              800: "#0E2339",
+              900: "#050C14",
+            },
+            accent: {
+              500: "#F8295C",
+              600: "#C63331",
+            },
+            bgdark: "#121217",
+            bglight: "#F9F9F9",
+            subgdark: "#1E1E25",
+            subglight: "#EDEDED",
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+
+    .markdown-preview {
+      line-height: 1.7;
+    }
+
+    .markdown-preview h1 {
+      font-size: 2em;
+      font-weight: bold;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+    }
+
+    .markdown-preview h2 {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+    }
+
+    .markdown-preview h3 {
+      font-size: 1.25em;
+      font-weight: bold;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+    }
+
+    .markdown-preview p {
+      margin-bottom: 1em;
+    }
+
+    .markdown-preview ul,
+    .markdown-preview ol {
+      margin-left: 1.5em;
+      margin-bottom: 1em;
+    }
+
+    .markdown-preview li {
+      margin-bottom: 0.5em;
+    }
+
+    .markdown-preview code {
+      background: rgb(100 116 139 / 0.1);
+      padding: 0.2em 0.4em;
+      border-radius: 0.25em;
+      font-size: 0.9em;
+    }
+
+    .markdown-preview pre {
+      background: rgb(100 116 139 / 0.1);
+      padding: 1em;
+      border-radius: 0.5em;
+      overflow-x: auto;
+      margin-bottom: 1em;
+    }
+
+    .markdown-preview a {
+      color: #0ea5e9;
+      text-decoration: underline;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .toast {
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .tag-input {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      border: 1px solid;
+      border-radius: 0.5rem;
+      min-height: 42px;
+    }
+
+    .tag-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      background: #0ea5e9;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+
+<body class="bg-bgdark text-slate-900 dark:text-slate-100 min-h-screen grid-background">
+
+  <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+ 
+    <div class="lg:col-span-7 space-y-6">
+      <div class="bg-subgdark border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <h2 class="text-2xl font-bold mb-6">
+          <span id="editorTitle">Create a new post</span>
+        </h2>
+
+        <form enctype="multipart/form-data" method="post" id="postForm" class="space-y-6">
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Title</label>
+            <input name="title" type="text" id="postTitle" placeholder="Enter the post title..."
+              class="w-full px-4 py-3 bg-bgdark border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              required>
+          </div>
+
+               <div>
+            <label class="block text-sm font-medium mb-2">Description</label>
+            <input name="description" type="text" id="postDescription" placeholder="Enter the post description..."
+              class="w-full px-4 py-3 bg-bgdark border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              required>
+          </div>
+
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Cover Image</label>
+            <div class="space-y-3">
+              <input name="file" type="file" id="postImage" accept="image/*"
+                class="w-full px-4 py-3 bg-bgdark border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
+                onchange="previewImage(event)">
+              <div id="imagePreview" class="hidden">
+                <img id="previewImg" src="/placeholder.svg" alt="Preview"
+                  class="w-full h-48 object-cover rounded-lg border border-slate-200 dark:border-slate-700">
+                <button type="button" onclick="removeImage()"
+                  class="mt-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                  Remove Image
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Tags</label>
+            <div id="tagsContainer"
+              class="tag-input border-slate-200 dark:border-slate-700 bg-bgdark">
+              <input name="slug" type="text" id="tagInput" placeholder="Enter a tag and press Enter..."
+                class="flex-1 min-w-[200px] bg-transparent border-none outline-none" onkeydown="handleTagInput(event)">
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Press Enter to add a tag</p>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <input name="pinned" type="checkbox" id="postPinned"
+              class="w-4 h-4 text-primary-600 bg-bgdark border border-slate-300 rounded focus:ring-primary-500 dark:bg-slate-800 dark:border-slate-600">
+            <label for="postPinned" class="text-sm font-medium">Pin this post</label>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Content (Markdown)</label>
+            <textarea name="content" id="postContent" rows="12"
+              placeholder="Enter the content in markdown...&#10;&#10;## Example Title&#10;&#10;This is a paragraph with **bold** and *italic*.&#10;&#10;- Item 1&#10;- Item 2"
+              class="w-full px-4 py-3 bg-bgdark border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
+              oninput="updatePreview()" required></textarea>
+          </div>
+
+          <div class="flex gap-3">
+            <button type="submit"
+              class="flex-1 px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors">
+              <span id="submitButtonText">Publish Post</span>
+            </button>
+            <button type="button" onclick="cancelEdit()"
+              class="px-6 py-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-lg transition-colors">
+              Clear Post
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="bg-subgdark border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+        <h3 class="text-xl font-bold mb-4">Content Preview</h3>
+        <div id="markdownPreview"
+          class="markdown-preview prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-400">
+          <p class="text-slate-400 dark:text-slate-500 italic">The preview will appear here as you type...</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    tags = [];
+    let currentImagePreview = null;
+
+    function previewImage(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          currentImagePreview = e.target.result;
+          document.getElementById('previewImg').src = e.target.result;
+          document.getElementById('imagePreview').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function removeImage() {
+      currentImagePreview = null;
+      document.getElementById('postImage').value = '';
+      document.getElementById('imagePreview').classList.add('hidden');
+    }
+
+    function handleTagInput(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const input = event.target;
+        const tag = input.value.trim();
+
+        if (tag && !tags.includes(tag)) {
+          tags.push(tag);
+          renderTags();
+          input.value = '';
+        }
+      }
+    }
+
+    function renderTags() {
+      const container = document.getElementById('tagsContainer');
+      const input = document.getElementById('tagInput');
+
+      container.querySelectorAll('.tag-item').forEach(el => el.remove());
+
+      tags.forEach(tag => {
+        const tagEl = document.createElement('div');
+        tagEl.className = 'tag-item';
+        tagEl.innerHTML = `
+          <span>${tag}</span>
+          <button type="button" onclick="removeTag('${tag}')" class="hover:text-red-200">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        `;
+        container.insertBefore(tagEl, input);
+      });
+    }
+
+    function removeTag(tag) {
+      tags = tags.filter(t => t !== tag);
+      renderTags();
+    }
+
+    function updatePreview() {
+      const content = document.getElementById('postContent').value;
+      const preview = document.getElementById('markdownPreview');
+
+      if (content.trim()) {
+        preview.innerHTML = marked.parse(content);
+      } else {
+        preview.innerHTML = '<p class="text-slate-400 dark:text-slate-500 italic">O preview aparecerá aqui conforme você digita...</p>';
+      }
+    }
+
+    
+    function cancelEdit() {
+      editingPostId = null;
+      document.getElementById('editorTitle').textContent = 'Criar Novo Post';
+      document.getElementById('submitButtonText').textContent = 'Publicar Post';
+      document.getElementById('postForm').reset();
+      tags = [];
+      renderTags();
+      removeImage();
+      updatePreview();
+    }
+
+  </script>
+</body>
+
+</html>
