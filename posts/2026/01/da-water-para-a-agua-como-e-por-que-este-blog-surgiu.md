@@ -1,13 +1,13 @@
 ---
-id: "852f0e3b-82ed-423e-a88c-8914240ea5d2"
-filename: "2026-01-15@852f0e3b-82ed-423e-a88c-8914240ea5d2.md"
-title: "Da water para a água: como e por que este blog surgiu."
-slug: "como-esse-blog-surgiu-complexidade-overengineering-consciencia-e-deixar-acontecer"
+id: "d373c531-f43e-4c9b-9192-0c8024d892ff"
+title: "Da water para a água: como e por que este blog surgiu. "
+slug: "da-water-para-a-agua-como-e-por-que-este-blog-surgiu"
 description: "Nesse post vou contar um pouco de como esse blog surgiu além de acontecimentos que moldaram a estrutura dele hoje em dia."
-date: "2026-01-15"
-image: "/assets/images/como-esse-blog-surgiu-complexidade-overengineering-consciencia-e-deixar-acontecer.jpg"
-pinned: false
+date: "2026-01-17"
+image: ""
+pinned: true
 ---
+
 
 ## Por que criar um espaço na web em 2026? Por que não usar o TikTok?
 
@@ -173,5 +173,7 @@ Sinta-se à vontade para entrar em contato comigo através das minhas redes soci
 - GitHub: [diaslui](https://github.com/diaslui)
 
 **Obrigado por ler.**
+
+
 
 

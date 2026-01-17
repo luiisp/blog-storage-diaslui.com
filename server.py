@@ -1,12 +1,27 @@
 from flask import Flask, render_template, request, redirect, url_for
 from slugify import slugify
 from datetime import date
-from uuid import uuid4
-import os, json
+import os
+import json
+import uuid
 import subprocess
 
-
 app = Flask(__name__)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+POSTS_DIR = os.path.join(BASE_DIR, "posts")
+IMAGES_DIR = os.path.join(BASE_DIR, "assets/images")
+INDEXES_DIR = os.path.join(BASE_DIR, "indexes")
+
+POSTS_INDEX = os.path.join(INDEXES_DIR, "posts.json")
+PINNED_INDEX = os.path.join(INDEXES_DIR, "pinned.json")
+LATEST_INDEX = os.path.join(INDEXES_DIR, "latest.json")
+
+os.makedirs(POSTS_DIR, exist_ok=True)
+os.makedirs(IMAGES_DIR, exist_ok=True)
+os.makedirs(INDEXES_DIR, exist_ok=True)
+
 
 
 def git_commit_and_push(message: str):
@@ -14,52 +29,57 @@ def git_commit_and_push(message: str):
     subprocess.run(["git", "commit", "-m", message], check=True)
     subprocess.run(["git", "push"], check=True)
 
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-POSTS_DIR = os.path.join(BASE_DIR, "posts")
-IMAGES_DIR = os.path.join(BASE_DIR, "assets/images")
-
-INDEX_JSON = os.path.join(POSTS_DIR, "index.json")
-LATEST_JSON = os.path.join(POSTS_DIR, "latest.json")
-
-os.makedirs(POSTS_DIR, exist_ok=True)
-os.makedirs(IMAGES_DIR, exist_ok=True)
-
-def load_json(path):
-    if not os.path.exists(path):
+def load_posts_index():
+    if not os.path.exists(POSTS_INDEX):
         return []
-    with open(path, "r", encoding="utf-8") as f:
+    with open(POSTS_INDEX, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def save_json(path, data):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def save_posts_index(posts):
+    with open(POSTS_INDEX, "w", encoding="utf-8") as f:
+        json.dump(posts, f, indent=2, ensure_ascii=False)
+
+
+def rebuild_derived_indexes(posts):
+    pinned = [p for p in posts if p.get("pinned")]
+    with open(PINNED_INDEX, "w", encoding="utf-8") as f:
+        json.dump(pinned, f, indent=2, ensure_ascii=False)
+
+    latest = sorted(posts, key=lambda p: p["date"], reverse=True)[:3]
+    with open(LATEST_INDEX, "w", encoding="utf-8") as f:
+        json.dump(latest, f, indent=2, ensure_ascii=False)
 
 @app.route("/", methods=["GET", "POST"])
 def admin():
     if request.method == "POST":
-        post_id = str(uuid4())
         title = request.form["title"]
         description = request.form["description"]
         content = request.form["content"]
-        slug = slugify(request.form["slug"] or title)
         pinned = request.form.get("pinned") == "on"
+
+        slug = slugify(request.form.get("slug") or title)
+        post_id = str(uuid.uuid4())
+        today = date.today().isoformat()
+
+        year, month, _ = today.split("-")
+
+        post_dir = os.path.join(POSTS_DIR, year, month)
+        os.makedirs(post_dir, exist_ok=True)
 
         img = request.files.get("image")
         image_path = ""
 
         if img:
-            ext = os.path.splitext(img.filename)[1]
-            img_name = f"{slug}{ext}"
+            img_name = f"{slug}{os.path.splitext(img.filename)[1]}"
             img.save(os.path.join(IMAGES_DIR, img_name))
             image_path = f"/assets/images/{img_name}"
 
-        today = date.today().isoformat()
-        filename = f"{today}@{post_id}.md"
+        md_filename = f"{slug}.md"
+        md_path = os.path.join(post_dir, md_filename)
 
         md = f"""---
 id: "{post_id}"
-filename: "{filename}"
 title: "{title}"
 slug: "{slug}"
 description: "{description}"
@@ -71,40 +91,33 @@ pinned: {str(pinned).lower()}
 {content}
 """
 
-        with open(os.path.join(POSTS_DIR, filename), "w", encoding="utf-8") as f:
+        with open(md_path, "w", encoding="utf-8") as f:
             f.write(md)
 
-        post_meta = {
+        posts = load_posts_index()
+
+        posts.append({
             "id": post_id,
-            "filename": filename,
             "title": title,
             "slug": slug,
             "description": description,
             "date": today,
             "image": image_path,
-            "pinned": pinned
-        }
+            "pinned": pinned,
+            "path": f"/posts/{year}/{month}/{md_filename}"
+        })
 
-        index = load_json(INDEX_JSON)
-        index.insert(0, post_meta)
-        save_json(INDEX_JSON, index)
-
-        pinned_posts = [p for p in index if p["pinned"]]
-        normal_posts = [p for p in index if not p["pinned"]]
-
-        latest = (pinned_posts + normal_posts)[:3]
-        save_json(LATEST_JSON, latest)
-
-        commit_msg = f"(auto) new post added: {filename}"
-        git_commit_and_push(commit_msg)
-
+        save_posts_index(posts)
+        rebuild_derived_indexes(posts)
+        git_commit_and_push(f"(auto) Add new post: {title}")
         return redirect(url_for("created"))
 
     return render_template("admin.html")
 
 @app.route("/created")
 def created():
-    return "created."
+    return "Post created successfully!"
+
 
 if __name__ == "__main__":
     app.run(debug=True)
