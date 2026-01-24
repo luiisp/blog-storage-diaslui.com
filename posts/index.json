@@ -1,5 +1,15 @@
 [
   {
+    "id": "6487831e-5180-4b88-96d9-ecd44446a6ab",
+    "filename": "2026-01-24@6487831e-5180-4b88-96d9-ecd44446a6ab.md",
+    "title": "Rejeite a modernidade e use neovim ",
+    "slug": "rejeite-a-modernidade-e-use-neovim",
+    "description": "Nesse breve artigo voce aprendera o que é o neovim e o básico para começar. (vale a pena se quiser codar rápido)",
+    "date": "2026-01-24",
+    "image": "/assets/images/rejeite-a-modernidade-e-use-neovim.jpg",
+    "pinned": false
+  },
+  {
     "id": "852f0e3b-82ed-423e-a88c-8914240ea5d2",
     "filename": "2026-01-15@852f0e3b-82ed-423e-a88c-8914240ea5d2.md",
     "title": "Da water para a água: como e por que este blog surgiu.",
